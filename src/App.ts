@@ -4,11 +4,16 @@
  * License: Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International.  Adapted from course materials by Evan Suma Rosenberg.
  */ 
 
+import { GUI } from 'dat.gui';
 import * as gfx from 'gophergfx'
 
 export class App extends gfx.GfxApp
 {
     private cameraControls: gfx.OrbitControls;
+
+    private character: gfx.Node3;
+
+    public morphAlpha: number;
 
     // --- Create the App class ---
     constructor()
@@ -17,6 +22,8 @@ export class App extends gfx.GfxApp
         super();
 
         this.cameraControls = new gfx.OrbitControls(this.camera);
+        this.character = new gfx.Node3();
+        this.morphAlpha = 0;
     }
 
 
@@ -45,6 +52,61 @@ export class App extends gfx.GfxApp
         ground.material.setColor(new gfx.Color(0, 0.5, 0.5));
         ground.position.y = -0.5;
         this.scene.add(ground);
+
+        this.character.add(this.loadMorphMesh(
+'./assets/LinkBody1.obj', 
+'./assets/LinkBody2.obj', 
+'./assets/LinkBody.png'
+));
+
+this.character.add(this.loadMorphMesh(
+'./assets/LinkEquipment1.obj', 
+'./assets/LinkEquipment2.obj', 
+'./assets/LinkEquipment.png'
+));
+
+this.character.add(this.loadMorphMesh(
+'./assets/LinkEyes1.obj', 
+'./assets/LinkEyes2.obj', 
+'./assets/LinkEyes.png'
+));
+
+this.character.add(this.loadMorphMesh(
+'./assets/LinkFace1.obj', 
+'./assets/LinkFace2.obj', 
+'./assets/LinkSkin.png'
+));
+
+this.character.add(this.loadMorphMesh(
+'./assets/LinkHair1.obj', 
+'./assets/LinkHair2.obj', 
+'./assets/LinkBody.png'
+));
+
+this.character.add(this.loadMorphMesh(
+'./assets/LinkHands1.obj', 
+'./assets/LinkHands2.obj', 
+'./assets/LinkSkin.png'
+));
+
+this.character.add(this.loadMorphMesh(
+'./assets/LinkMouth1.obj', 
+'./assets/LinkMouth2.obj', 
+'./assets/LinkBody.png'
+));
+
+         const gui = new GUI();
+        gui.width = 200;
+
+        const morphController = gui.add(this, 'morphAlpha', 0, 1);
+        morphController.name('Alpha');
+
+
+    
+
+
+        this.scene.add(this.character);
+
     }
 
     
@@ -52,5 +114,38 @@ export class App extends gfx.GfxApp
     update(deltaTime: number): void 
     {
         this.cameraControls.update(deltaTime);
+
+        for(let i=0; i < this.character.children.length; i++)
+        {
+        const morphMesh = this.character.children[i] as gfx.MorphMesh3;
+        morphMesh.morphAlpha = this.morphAlpha;
+        }
+
+    }
+
+    private loadMorphMesh(meshFile1: string, meshFile2: string, textureFile: string): gfx.MorphMesh3
+    {
+        const morphMesh = new gfx.MorphMesh3();
+
+        gfx.MeshLoader.loadOBJ(meshFile1, (loadedMesh: gfx.Mesh3) => {
+             morphMesh.positionBuffer = loadedMesh.positionBuffer;
+             morphMesh.normalBuffer = loadedMesh.normalBuffer;
+            morphMesh.texCoordBuffer = loadedMesh.texCoordBuffer;
+            morphMesh.indexBuffer = loadedMesh.indexBuffer;
+            morphMesh.vertexCount = loadedMesh.vertexCount;
+            morphMesh.triangleCount = loadedMesh.triangleCount;
+        });
+
+         gfx.MeshLoader.loadOBJ(meshFile2, (loadedMesh: gfx.Mesh3) => {
+             morphMesh.morphTargetPositionBuffer = loadedMesh.positionBuffer;
+             morphMesh.morphTargetNormalBuffer = loadedMesh.normalBuffer;
+        });
+       
+
+        morphMesh.material.texture = new gfx.Texture(textureFile);        
+
+        return morphMesh;
+
+       
     }
 }
